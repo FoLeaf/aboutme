@@ -1,0 +1,36 @@
+ွ஡ਟ id19y@outlook.com ·  (+86) 193-797-39921 | 20 ෟ
+ ࣟ
+ඌ࿐ჽ ඌ (2023 – ࣂ)
+ ି
+• ඃ༑ C Ġඃ਀൐Ⴈ Python ऎщཿb
+• ඃ਀ᅧ໤ STM32F1/F4 ༢ਙ MCUࡱࡗ, ೂğFreeRTOSaLwIPaFatFSaL VGLb
+• Ⴕ Modbus-RTU ဒĠඃ਀ USARTaRS485aSPIaI²CaOne-WireaMQTTčPahoླྀၰb
+• ඃ਀൐Ⴈ Keil5aIAR EW ARMaSTM32CubeMX/IDEaCLion + CMake + GCC/Clang b
+• ऎСචҪ PCB ৫Է EDAaADC/DMA b
+• ඃ਀൐Ⴈ Git ྟb
+ ৥
+Ⴟ Modbus RTU ༢๤ 2025.07 – ࣂ
+ؿ/Ӯ ದཛଢ
+• Ⴟ STM32F4 ၍ᆱ FreeRTOSaLwIP, ಩ༀԩ৘aၛ෾ຩ๙ྐି৯b
+• ؟ 255 ა൐Ⴈ DMA ൈ CPU ᅝႨੱ <5%b
+• Ӯ Paho-MQTT ކࢲ FatFS ൫ིੱb
+• ൐Ⴈ L VGLࠏ GUIކ PyQt ඔऌჷ஥ᇂb
+Џ 2025.01 – 2025.03
+ؿ ཛଢ
+• ݖ USART + DMA ൌགྷ STM32 ა ESP8266 ི๙ྐđMQTT ᆷ਷ཙႋ࿼Ӿ < 100 ms b
+• đᄝ൩໑č25±5℃Ď༯ 20%⚶80% ଽ༂ҵ <1%ຶ༂ҵ <3%b
+• Ӯ ATGM336H GPS ྨ૤ଆൔđิശ 30% b
+• ᇅ + ഒ 60%ิശॖႨྟb
+Ⴟ STM32F1 ᆔ௠॥ᇅव 2024.07 – 2024.09
+ؿ/ൌགྷ ದཛଢ
+• ݖ DMA+GPIO+PWM ಒଆ୅ HUB75E ׮ 64×64 ಆґ௠đൌགྷ 60 FPS ඗ྍੱb
+• Ӯ DHT11Ď aESP8266čWi-FiĎ đᆦӻWeb ஥ຩა NTP ؇ࣚ ±100msĎ b
+• ؇/֮ࢆݻۿࠏ
+25%b
+ ౦ঃ
+• ࢂ֩
+• ି৯็ᅞ೗čC/C++ ࢂ֩
+• ࢂ֩ؽݓ
+• 2025 ࢂ֩
+ ିᆣ඀
+• ࣁ • ൫ჴ (ഽ) • ჴ (۽ࠩۚ•) ࠩ
