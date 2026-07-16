@@ -1,0 +1,5 @@
+{"file": "CONTEXT.md", "reason": "Verify code vocabulary and content shape match domain glossary"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Check no duplicated content sources or parallel formatters"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Check content → presentation data flow consistency"}
+{"file": ".trellis/tasks/07-16-portfolio-domain-align/prd.md", "reason": "Acceptance criteria AC1–AC8"}
+{"file": ".trellis/tasks/07-16-portfolio-domain-align/design.md", "reason": "Contract and boundary compliance"}

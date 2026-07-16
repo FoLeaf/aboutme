@@ -1,8 +1,28 @@
-import { prepareWithSegments, layoutNextLine, materializeLineRange, layoutWithLines, type LayoutCursor } from '@chenglou/pretext';
+import { prepareWithSegments, layoutNextLine, layoutWithLines, type LayoutCursor } from '@chenglou/pretext';
+import {
+  formatAwardsCanvas,
+  formatHeroText,
+  formatProjectsCanvas,
+  subject,
+  type FocusTag,
+  type SkillGroup,
+  type Subject,
+} from './content';
 
 window.addEventListener('error', (e) => {
-  console.error("Uncaught runtime error:", e.error);
+  console.error('Uncaught runtime error:', e.error);
 });
+
+const INK = '#111111';
+const PAPER = '#f4f1ea';
+const YELLOW = '#ffe14d';
+const CYAN = '#5ce1e6';
+const MUTED = '#3a3a3a';
+
+// Derived canvas strings from Subject content (single source)
+const heroText = formatHeroText(subject);
+const projectCanvasTexts = formatProjectsCanvas(subject.projects);
+const awardsCanvasText = formatAwardsCanvas(subject.awards, subject.credentials);
 
 // 1. Mouse interactions
 let mouseX = -1000;
@@ -18,138 +38,302 @@ const handleMouseMove = (e: MouseEvent) => {
   document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
 };
 window.addEventListener('mousemove', handleMouseMove);
-window.addEventListener('resize', () => { isResized = true; });
+const markResized = () => {
+  isResized = true;
+};
+window.addEventListener('resize', markResized);
+window.visualViewport?.addEventListener('resize', markResized);
+window.visualViewport?.addEventListener('scroll', markResized);
 
-// --- Resume Core Text Data ---
-const slogan = "19y.\n\n" +
-  "高级嵌入式与物联网研发工程师。\n\n" +
-  "打破架构界限，创造纯粹性能与动态体系的双刃之剑。在这里，\n" +
-  "底层思维不再是死板的寄存器与指针堆砌，而是如同电子脉冲一样\n" +
-  "极速穿轨的精密操控艺术。\n\n" + 
-  "致力于将极度的硬件克制与软件张力，完美融合在每一组时序代码的缝隙之中。";
+// --- DOM hydrate from Subject content ---
 
-const projects = [
-  "【基于 Modbus RTU 的数据采集系统】 (2025.07 - 至今) · 独立项目\n" +
-  "• 基于 STM32F4 平台跨阶层移植 FreeRTOS 与 LwIP 协议栈，赋予多任务并行与以太网互联能力。\n" +
-  "• 破局底层瓶颈：支持多达 255 个从站配置，通过定制帧间隔调整结合全 DMA 自动传输机制，在繁重的数据采集时段实测 CPU 占用率极度碾压在 <5%。\n" +
-  "• 生态结合：深度集成 Paho-MQTT 客户端打通上云壁垒，整合 FatFS 实现本地灾备备份。\n" +
-  "• 跨界 GUI：使用 C/LVGL 构建下位机屏幕体系，完美结合 Python/PyQt 撰写的高级上位仪表台。",
+const hydrateChrome = (s: Subject) => {
+  document.title = `${s.displayName} | ${s.roleLine.replace(/。$/, '')}`;
 
-  "【物联网共享充电宝架构】 (2025.01 - 2025.03) · 团队核心研发\n" +
-  "• 底层驱动：打通 USART 配合异步双通道 DMA，架设 STM32 至 ESP8266 高速桥梁，MQTT 延迟测定 < 100 ms。\n" +
-  "• 极致算法：在宽泛室内环境中，搭载多极校准与非线性滤波，电量监测误差压制 <1%。\n" +
-  "• 功耗压榨：重构超低功耗休眠唤醒事件链，结合 ATGM336H GPS，生生延长 30% 续航。\n" +
-  "• 系统鲁棒性：断电无感重连拓扑及云端日志遥感系统，基站掉线频率下探超 60%。",
+  const logo = document.querySelector('.logo');
+  if (logo) {
+    logo.textContent = `${s.displayName}.`;
+  }
 
-  "【基于 STM32F1 的异构点阵屏控制卡】 (2024.07 - 2024.09) · 独立项目\n" +
-  "• 时序操控：榨干 F1 底线，凭借 DMA+GPIO+PWM 完美模拟 HUB75E 协议时序，单核直驱全彩屏锁屏 60 FPS。\n" +
-  "• 万物互联：原生 DHT11 温湿度传感体系以及 Wi-Fi 芯片，构建无感 Web 近场配网与网络授时 (±100ms 级别)。\n" +
-  "• 美学环保：自动光敏刷新策略模型，全链功耗断崖式削减 25%。"
-];
+  const footerMark = document.querySelector('.footer-mark');
+  if (footerMark) {
+    footerMark.textContent = s.displayName.toUpperCase();
+  }
 
-const awards = "🏆 顶级荣誉墙 与 专业技能认证\n" +
-  "--------------------------------------------------\n" +
-  "🥇 赛事奖励：\n" +
-  "  • 第九届全国大学生集成电路创新创业大赛 — [全国一等奖]\n" +
-  "  • 第五届全国大学生计算机能力挑战赛(C/C++赛道) — [全国一等奖]\n" +
-  "  • 2025 年江西省职业院校技能大赛（物联网应用开发赛项） — [省级一等奖]\n" +
-  "  • 第十六届蓝桥杯全国软件和信息技术专业人才大赛（嵌入式设计与开发赛道） — [全国二等奖]\n\n" +
-  "📙 权威凭证：\n" +
-  "  • 全国大学生国家奖学金\n" +
-  "  • 物联网安装调试员（技师级）\n" +
-  "  • 照明工程施工员（高级工）\n" +
-  "  • 大学生英语四级等级资格";
+  const footerRole = document.querySelector('.footer-role');
+  if (footerRole) {
+    // Role Line from Subject; strip trailing period for chrome density.
+    footerRole.textContent = s.roleLine.replace(/。$/, '');
+  }
+};
+
+const hydrateAbout = (s: Subject) => {
+  const nameTitle = document.querySelector('.name-title');
+  if (nameTitle) {
+    nameTitle.textContent = s.displayName;
+  }
+
+  const badgeRow = document.getElementById('about-focus-tags');
+  if (badgeRow) {
+    badgeRow.replaceChildren(
+      ...s.focusTags.map((tag: FocusTag) => {
+        const span = document.createElement('span');
+        span.className = `badge badge--${tag.variant}`;
+        span.textContent = tag.label;
+        return span;
+      })
+    );
+  }
+
+  const opening = document.getElementById('about-opening-copy');
+  if (opening) {
+    // Full Opening Copy; collapse hard line-breaks from hero pre-wrap into readable prose.
+    opening.textContent = s.openingCopy.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+};
+
+const hydrateSkills = (groups: SkillGroup[]) => {
+  const grid = document.getElementById('skills-grid');
+  if (!grid) return;
+
+  grid.replaceChildren(
+    ...groups.map((group) => {
+      const article = document.createElement('article');
+      article.className = `nb-card skill-card skill-card--${group.variant}`;
+
+      const h3 = document.createElement('h3');
+      h3.textContent = group.title;
+      article.appendChild(h3);
+
+      const ul = document.createElement('ul');
+      for (const point of group.points) {
+        const li = document.createElement('li');
+        // Skill points may include trusted <strong> markers from repo-authored content.
+        li.innerHTML = point.text;
+        ul.appendChild(li);
+      }
+      article.appendChild(ul);
+
+      return article;
+    })
+  );
+};
+
+const hydrateSubjectDom = (s: Subject) => {
+  hydrateChrome(s);
+  hydrateAbout(s);
+  hydrateSkills(s.skillGroups);
+};
+
+hydrateSubjectDom(subject);
 
 // --- Hero Canvas setup ---
 const canvasHero = document.getElementById('pretext-hero') as HTMLCanvasElement;
 const ctxHero = canvasHero.getContext('2d')!;
 let heroPrepared: any;
+let heroFontSizePx = 40;
+let heroLineHeight = 58;
+let heroContainerWidth = 0;
+let heroStartX = 0;
+let heroStartY = 0;
+let heroContentHeight = 0;
+
+const getViewportSize = () => {
+  const vv = window.visualViewport;
+  return {
+    w: Math.round(vv?.width ?? window.innerWidth),
+    h: Math.round(vv?.height ?? window.innerHeight),
+  };
+};
+
+const getNavBottom = () => {
+  const nav = document.querySelector('.nav') as HTMLElement | null;
+  if (!nav) return 72;
+  return Math.ceil(nav.getBoundingClientRect().bottom);
+};
+
+const getHeroMetrics = (w: number) => {
+  const isMobile = w < 768;
+  const isNarrow = w < 400;
+  const fontSize = isNarrow ? 20 : isMobile ? 22 : 40;
+  const lineHeight = Math.round(fontSize * (isMobile ? 1.55 : 1.45));
+  const sidePad = isMobile ? Math.max(16, Math.round(w * 0.05)) : Math.round(w * 0.075);
+  const containerWidth = Math.min(w - sidePad * 2, 1100);
+  return { isMobile, fontSize, lineHeight, containerWidth, sidePad };
+};
+
+const measureHeroHeight = (prepared: any, width: number, lineHeight: number) => {
+  let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 };
+  let lines = 0;
+  while (true) {
+    const line = layoutNextLine(prepared, cursor, width);
+    if (!line) break;
+    cursor = line.end;
+    lines += 1;
+    if (lines > 80) break;
+  }
+  return lines * lineHeight;
+};
+
+const prepareHeroFit = (w: number, availableH: number) => {
+  const base = getHeroMetrics(w);
+  let fontSize = base.fontSize;
+  const minFont = base.isMobile ? 15 : 28;
+
+  while (fontSize >= minFont) {
+    const lineHeight = Math.round(fontSize * (base.isMobile ? 1.5 : 1.45));
+    const prepared = prepareWithSegments(
+      heroText,
+      `700 ${fontSize}px "Space Grotesk", system-ui, sans-serif`,
+      { whiteSpace: 'pre-wrap' }
+    );
+    const height = measureHeroHeight(prepared, base.containerWidth, lineHeight);
+    if (height <= availableH || fontSize === minFont) {
+      return {
+        ...base,
+        fontSize,
+        lineHeight,
+        prepared,
+        contentHeight: height,
+      };
+    }
+    fontSize -= 1;
+  }
+
+  const lineHeight = Math.round(minFont * 1.5);
+  const prepared = prepareWithSegments(
+    heroText,
+    `700 ${minFont}px "Space Grotesk", system-ui, sans-serif`,
+    { whiteSpace: 'pre-wrap' }
+  );
+  return {
+    ...base,
+    fontSize: minFont,
+    lineHeight,
+    prepared,
+    contentHeight: measureHeroHeight(prepared, base.containerWidth, lineHeight),
+  };
+};
 
 const renderHeroDynamic = () => {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  
+  const { w, h } = getViewportSize();
+  const baseMetrics = getHeroMetrics(w);
+  heroContainerWidth = baseMetrics.containerWidth;
+  heroStartX = (w - baseMetrics.containerWidth) / 2;
+
+  const navBottom = getNavBottom();
+  const stampReserve = baseMetrics.isMobile ? 52 : 72;
+  const topPad = navBottom + (baseMetrics.isMobile ? 10 : 20);
+  const bottomPad = stampReserve + (baseMetrics.isMobile ? 10 : 20);
+  const available = Math.max(h - topPad - bottomPad, 120);
+
   if (isResized || !heroPrepared) {
     canvasHero.width = w * window.devicePixelRatio;
     canvasHero.height = h * window.devicePixelRatio;
+    canvasHero.style.width = `${w}px`;
+    canvasHero.style.height = `${h}px`;
     ctxHero.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-    
-    const isMobile = w < 768;
-    const heroFontSize = isMobile ? '24px' : '36px';
-    heroPrepared = prepareWithSegments(slogan, `800 ${heroFontSize} "Outfit", sans-serif`, { whiteSpace: 'pre-wrap' });
+
+    const fit = prepareHeroFit(w, available);
+    heroPrepared = fit.prepared;
+    heroFontSizePx = fit.fontSize;
+    heroLineHeight = fit.lineHeight;
+    heroContentHeight = fit.contentHeight;
   }
-  
-  const containerWidth = Math.min(w * 0.85, 1200);   
-  const startX = (w - containerWidth) / 2;
-  const lineHeight = w < 768 ? 44 : 56;
-  const MAGIC_ESTIMATED_HEIGHT = 10 * lineHeight; 
-  const startY = (h - MAGIC_ESTIMATED_HEIGHT) / 2;
+
+  const metrics = {
+    isMobile: baseMetrics.isMobile,
+    fontSize: heroFontSizePx,
+    lineHeight: heroLineHeight,
+  };
+  const centeredY = topPad + (available - heroContentHeight) / 2;
+  heroStartY = heroContentHeight > available ? topPad : Math.max(topPad, centeredY);
 
   ctxHero.clearRect(0, 0, w, h);
   ctxHero.textAlign = 'left';
   ctxHero.textBaseline = 'top';
 
-  const AVOID_RADIUS = 280; 
+  const AVOID_RADIUS = metrics.isMobile ? 0 : 80;
+  const fontStr = `700 ${heroFontSizePx}px "Space Grotesk", system-ui, sans-serif`;
+  const shadowOffset = metrics.isMobile ? 2 : 3;
+  const clipBottom = h - bottomPad + heroLineHeight * 0.35;
 
   let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 };
-  let currentY = startY;
+  let currentY = heroStartY;
 
   while (true) {
-    const centerLineY = currentY + lineHeight / 2;
+    if (currentY > clipBottom) break;
+
+    const centerLineY = currentY + heroLineHeight / 2;
     const dy = Math.abs(centerLineY - mouseY);
 
-    let spans: {x: number, w: number}[] = [ {x: startX, w: containerWidth} ];
+    let spans: { x: number; w: number }[] = [{ x: heroStartX, w: heroContainerWidth }];
 
-    if (dy < AVOID_RADIUS) {
-       const dx = Math.sqrt(AVOID_RADIUS * AVOID_RADIUS - dy * dy);
-       const cutoutLeft = mouseX - dx;
-       const cutoutRight = mouseX + dx;
-       
-       spans = [];
-       if (cutoutLeft > startX) {
-         const leftFragWidth = cutoutLeft - startX;
-         if (leftFragWidth > 60) { 
-            spans.push({ x: startX, w: leftFragWidth });
-         }
-       }
-       if (cutoutRight < startX + containerWidth) {
-         const rightFragWidth = (startX + containerWidth) - cutoutRight;
-         if (rightFragWidth > 60) {
-            spans.push({ x: cutoutRight, w: rightFragWidth });
-         }
-       }
+    if (AVOID_RADIUS > 0 && dy < AVOID_RADIUS) {
+      const dx = Math.sqrt(AVOID_RADIUS * AVOID_RADIUS - dy * dy);
+      const cutoutLeft = mouseX - dx;
+      const cutoutRight = mouseX + dx;
+
+      spans = [];
+      if (cutoutLeft > heroStartX) {
+        const leftFragWidth = cutoutLeft - heroStartX;
+        if (leftFragWidth > 60) {
+          spans.push({ x: heroStartX, w: leftFragWidth });
+        }
+      }
+      if (cutoutRight < heroStartX + heroContainerWidth) {
+        const rightFragWidth = heroStartX + heroContainerWidth - cutoutRight;
+        if (rightFragWidth > 60) {
+          spans.push({ x: cutoutRight, w: rightFragWidth });
+        }
+      }
     }
 
     let exhausted = false;
     for (let i = 0; i < spans.length; i++) {
-       const span = spans[i];
-       const line = layoutNextLine(heroPrepared, cursor, span.w);
-       if (!line) {
-         exhausted = true; 
-         break;
-       }
-       
-       cursor = line.end;
+      const span = spans[i];
+      const line = layoutNextLine(heroPrepared, cursor, span.w);
+      if (!line) {
+        exhausted = true;
+        break;
+      }
 
-       const gradient = ctxHero.createLinearGradient(span.x, 0, span.x + span.w, 0);
-       gradient.addColorStop(0, '#ffffff');
-       gradient.addColorStop(1, '#38bdf8'); // Tech Sky Blue
-       
-       ctxHero.shadowColor = 'rgba(14, 165, 233, 0.4)';
-       ctxHero.shadowBlur = 12;
-       ctxHero.fillStyle = gradient;
-       ctxHero.font = `800 ${w < 768 ? '24px' : '36px'} "Outfit", sans-serif`;
-       ctxHero.fillText(line.text, span.x, currentY);
-       ctxHero.shadowBlur = 0;
+      cursor = line.end;
+      ctxHero.font = fontStr;
+
+      ctxHero.fillStyle = YELLOW;
+      ctxHero.fillText(line.text, span.x + shadowOffset, currentY + shadowOffset);
+
+      ctxHero.fillStyle = INK;
+      ctxHero.fillText(line.text, span.x, currentY);
     }
-    
+
     if (exhausted) break;
-    currentY += lineHeight;
-    
-    if (currentY > h + 1000) break;
+    currentY += heroLineHeight;
   }
 };
 
+const drawHardCard = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  fill: string
+) => {
+  // Offset shadow block
+  ctx.fillStyle = INK;
+  ctx.fillRect(x + 5, y + 5, w, h);
+
+  // Face
+  ctx.fillStyle = fill;
+  ctx.fillRect(x, y, w, h);
+
+  // Thick border
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+};
 
 const renderSections = () => {
   try {
@@ -157,20 +341,35 @@ const renderSections = () => {
     if (!cvsProj) return;
     const ctxProj = cvsProj.getContext('2d')!;
 
-    const containerW = cvsProj.parentElement!.clientWidth || window.innerWidth;
-    const w = window.innerWidth;
+    const parent = cvsProj.parentElement!;
+    const shellPad = 8; // matches .nb-canvas-shell padding
+    const containerW = Math.max(
+      Math.floor(parent.clientWidth - shellPad * 2) || getViewportSize().w - 40,
+      200
+    );
+    const { w } = getViewportSize();
     const isMobile = w < 768;
-    const projFontStr = isMobile ? '300 16px "Inter", sans-serif' : '300 18.5px "Inter", sans-serif';
-    const marginW = isMobile ? 20 : 40;
-    const cardW = containerW; 
-    const textW = Math.max(cardW - marginW * 2, 200); 
-    const projLineH = isMobile ? 26 : 34;
-    
-    const preparedProjects = projects.map(p => prepareWithSegments(p, projFontStr, { whiteSpace: 'pre-wrap' }));
+    const isNarrow = w < 400;
+    const bodySize = isNarrow ? 14 : isMobile ? 15 : 17.5;
+    const titleSize = isNarrow ? 15 : isMobile ? 16 : 19;
+    const projFontStr = `500 ${bodySize}px "Space Grotesk", system-ui, sans-serif`;
+    const titleFontStr = `700 ${titleSize}px "Space Grotesk", system-ui, sans-serif`;
+    const marginW = isNarrow ? 14 : isMobile ? 16 : 28;
+    const cardW = Math.max(containerW - 4, 180);
+    const textW = Math.max(cardW - marginW * 2, 140);
+    const projLineH = isNarrow ? 22 : isMobile ? 24 : 30;
+    const cardPadY = isMobile ? 18 : 22;
+    const cardGap = isMobile ? 16 : 22;
+
+    const preparedProjects = projectCanvasTexts.map((p) =>
+      prepareWithSegments(p, projFontStr, { whiteSpace: 'pre-wrap' })
+    );
     const layouts = preparedProjects.map((p) => layoutWithLines(p, textW, projLineH));
-    
-    let requiredHeight = layouts.reduce((acc, l) => acc + l.height + 80, 0);
-    
+
+    const cardFills = [PAPER, '#fff8d6', '#ffe4ef'];
+    const requiredHeight =
+      layouts.reduce((acc, l) => acc + l.height + cardPadY * 2 + cardGap, 0) + 8;
+
     cvsProj.width = containerW * window.devicePixelRatio;
     cvsProj.height = requiredHeight * window.devicePixelRatio;
     cvsProj.style.width = `${containerW}px`;
@@ -178,97 +377,109 @@ const renderSections = () => {
     ctxProj.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
     ctxProj.clearRect(0, 0, containerW, requiredHeight);
 
-    let currentY = 0;
+    let currentY = 4;
     layouts.forEach((layout, index) => {
-      const cardHeight = layout.height + 60; 
-      
-      ctxProj.fillStyle = 'rgba(15, 15, 15, 0.4)';
-      ctxProj.beginPath();
-      ctxProj.roundRect(0, currentY, cardW, cardHeight, 16);
-      ctxProj.fill();
+      const cardHeight = layout.height + cardPadY * 2;
+      const fill = cardFills[index % cardFills.length];
 
-      const cardGrad = ctxProj.createLinearGradient(0, currentY, cardW, currentY + cardHeight);
-      cardGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-      cardGrad.addColorStop(1, 'rgba(14, 165, 233, 0.05)'); // Sky-Blue tint
-      ctxProj.strokeStyle = cardGrad;
-      ctxProj.lineWidth = 1;
-      ctxProj.stroke();
+      drawHardCard(ctxProj, 2, currentY, cardW - 4, cardHeight, fill);
 
       ctxProj.textAlign = 'left';
       ctxProj.textBaseline = 'top';
 
-      for(let i=0; i<layout.lines.length; i++) {
-         let lineTxt = layout.lines[i].text;
-         let yPos = currentY + 30 + i * projLineH;
-         
-         if (lineTxt.includes('【')) {
-            ctxProj.fillStyle = '#ffffff';
-            ctxProj.font = isMobile ? '600 17.5px "Inter", sans-serif' : '700 21px "Inter", sans-serif';
-         } else if (lineTxt.trim().startsWith('•')) {
-            ctxProj.fillStyle = '#cccccc';
-            ctxProj.font = projFontStr;
-         } else {
-            ctxProj.fillStyle = '#999999';
-            ctxProj.font = projFontStr;
-         }
-         ctxProj.fillText(lineTxt, marginW, yPos);
+      for (let i = 0; i < layout.lines.length; i++) {
+        const lineTxt = layout.lines[i].text;
+        const yPos = currentY + cardPadY + i * projLineH;
+
+        if (lineTxt.includes('【')) {
+          ctxProj.fillStyle = INK;
+          ctxProj.font = titleFontStr;
+        } else {
+          ctxProj.fillStyle = MUTED;
+          ctxProj.font = projFontStr;
+        }
+        ctxProj.fillText(lineTxt, marginW, yPos);
       }
-      currentY += cardHeight + 30; 
+      currentY += cardHeight + cardGap;
     });
-    
+
     const cvsAwd = document.getElementById('pretext-awards') as HTMLCanvasElement;
     if (!cvsAwd) return;
     const ctxAwd = cvsAwd.getContext('2d')!;
-    
-    const awdFontStr = isMobile ? '400 16px "Inter", sans-serif' : '400 20px "Inter", sans-serif';
-    const preparedAwards = prepareWithSegments(awards, awdFontStr, { whiteSpace: 'pre-wrap' });
-    const awdLayout = layoutWithLines(preparedAwards, textW, isMobile ? 30 : 42);
-    
-    const awdHeight = awdLayout.height + 80;
-    cvsAwd.width = containerW * window.devicePixelRatio;
+
+    // Measure Awards shell independently (do not reuse Projects parent metrics).
+    const awdParent = cvsAwd.parentElement!;
+    const awdShellPad = isMobile ? 6 : 8;
+    const awdContainerW = Math.max(
+      Math.floor(awdParent.clientWidth - awdShellPad * 2) || getViewportSize().w - 40,
+      200
+    );
+    const awdMarginW = isNarrow ? 12 : isMobile ? 14 : 28;
+    const awdCardW = Math.max(awdContainerW - 4, 180);
+    const awdTextW = Math.max(awdCardW - awdMarginW * 2, 120);
+
+    const awdBody = isNarrow ? 13 : isMobile ? 14 : 18;
+    const awdTitle = isNarrow ? 14 : isMobile ? 15 : 19;
+    // Extra line height on mobile so wrapped Chinese lines do not collide.
+    const awdLineH = isNarrow ? 24 : isMobile ? 26 : 34;
+    const awdFontStr = `500 ${awdBody}px "Space Grotesk", system-ui, sans-serif`;
+    const awdTitleFont = `700 ${awdTitle}px "Space Grotesk", system-ui, sans-serif`;
+    const preparedAwards = prepareWithSegments(awardsCanvasText, awdFontStr, {
+      whiteSpace: 'pre-wrap',
+    });
+    const awdLayout = layoutWithLines(preparedAwards, awdTextW, awdLineH);
+
+    // Only section headers use title weight — never match "奖" inside award rows
+    // (e.g. 全国一等奖), which previously forced title font onto body lines and
+    // caused overflow / overlap on narrow viewports.
+    const isAwardsHeaderLine = (lineText: string) => {
+      const t = lineText.trim();
+      if (!t || /^-+$/.test(t)) return false;
+      return (
+        t.includes('荣誉墙') ||
+        t.includes('赛事奖励') ||
+        t.includes('权威凭证') ||
+        t.startsWith('🏆') ||
+        t.startsWith('🥇') ||
+        t.startsWith('📙')
+      );
+    };
+
+    const awdPadY = isMobile ? 18 : 28;
+    const awdHeight = awdLayout.height + awdPadY * 2 + 8;
+    cvsAwd.width = awdContainerW * window.devicePixelRatio;
     cvsAwd.height = awdHeight * window.devicePixelRatio;
-    cvsAwd.style.width = `${containerW}px`;
+    cvsAwd.style.width = `${awdContainerW}px`;
     cvsAwd.style.height = `${awdHeight}px`;
     ctxAwd.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-    ctxAwd.clearRect(0, 0, containerW, awdHeight);
-    
-    const awdGrad = ctxAwd.createLinearGradient(0, 0, 0, awdHeight);
-    awdGrad.addColorStop(0, 'rgba(14, 165, 233, 0.08)');
-    awdGrad.addColorStop(1, 'rgba(10, 10, 10, 0.01)');
-    
-    ctxAwd.fillStyle = awdGrad;
-    ctxAwd.beginPath();
-    ctxAwd.roundRect(0, 0, cardW, awdHeight, 16);
-    ctxAwd.fill();
-    
-    ctxAwd.strokeStyle = 'rgba(14, 165, 233, 0.3)';
-    ctxAwd.lineWidth = 1;
-    ctxAwd.stroke();
+    ctxAwd.clearRect(0, 0, awdContainerW, awdHeight);
+
+    drawHardCard(ctxAwd, 2, 4, awdCardW - 4, awdHeight - 10, CYAN);
+
     ctxAwd.textBaseline = 'top';
 
-    for(let i=0; i<awdLayout.lines.length; i++) {
-       let lineText = awdLayout.lines[i].text;
-       if (lineText.includes('奖') || lineText.trim().startsWith('🏆')) {
-          ctxAwd.fillStyle = '#bae6fd'; // sky-200 Light Cyan
-          ctxAwd.font = isMobile ? '700 17.5px "Inter", sans-serif' : '700 21.5px "Inter", sans-serif';
-       } else {
-          ctxAwd.fillStyle = '#b3b3b3';
-          ctxAwd.font = awdFontStr;
-       }
-       ctxAwd.fillText(lineText, marginW, 40 + i * (isMobile ? 30 : 42));
+    for (let i = 0; i < awdLayout.lines.length; i++) {
+      const lineText = awdLayout.lines[i].text;
+      if (isAwardsHeaderLine(lineText)) {
+        ctxAwd.fillStyle = INK;
+        ctxAwd.font = awdTitleFont;
+      } else {
+        ctxAwd.fillStyle = MUTED;
+        ctxAwd.font = awdFontStr;
+      }
+      ctxAwd.fillText(lineText, awdMarginW, awdPadY + i * awdLineH);
     }
   } catch (err) {
-    console.error("Sections render error:", err);
+    console.error('Sections render error:', err);
   }
 };
-
 
 const gameLoop = () => {
   if (isResized || lastMouseX !== mouseX || lastMouseY !== mouseY) {
     renderHeroDynamic();
     lastMouseX = mouseX;
     lastMouseY = mouseY;
-    
+
     if (isResized) {
       renderSections();
       isResized = false;
@@ -277,30 +488,36 @@ const gameLoop = () => {
   requestAnimationFrame(gameLoop);
 };
 
-window.addEventListener('scroll', () => {
-  const scrollY = window.scrollY;
-  const fadePoint = window.innerHeight * 0.9;
-  const opacity = Math.max(0, 1 - (scrollY / fadePoint));
-  if (canvasHero) {
-     canvasHero.style.opacity = String(opacity);
-  }
-  document.querySelectorAll('.fade-in').forEach(el => {
-     const rect = el.getBoundingClientRect();
-     if (rect.top < window.innerHeight * 0.85) {
-       el.classList.add('visible');
-     }
-  });
-});
+window.addEventListener(
+  'scroll',
+  () => {
+    const scrollY = window.scrollY;
+    const { h } = getViewportSize();
+    const fadePoint = h * 0.75;
+    const opacity = Math.max(0, 1 - scrollY / fadePoint);
+    if (canvasHero) {
+      canvasHero.style.opacity = String(opacity);
+      canvasHero.style.visibility = opacity <= 0.02 ? 'hidden' : 'visible';
+    }
+    document.querySelectorAll('.fade-in').forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < h * 0.9) {
+        el.classList.add('visible');
+      }
+    });
+  },
+  { passive: true }
+);
 
 setTimeout(() => {
   if (document.fonts) {
-     document.fonts.ready.then(() => { 
-        isResized = true; 
-        requestAnimationFrame(gameLoop);
-     });
+    document.fonts.ready.then(() => {
+      isResized = true;
+      requestAnimationFrame(gameLoop);
+    });
   } else {
-     isResized = true;
-     requestAnimationFrame(gameLoop);
+    isResized = true;
+    requestAnimationFrame(gameLoop);
   }
   window.dispatchEvent(new Event('scroll'));
 }, 100);

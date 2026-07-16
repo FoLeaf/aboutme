@@ -1,0 +1,4 @@
+{"file": "CONTEXT.md", "reason": "Domain language and term boundaries the content model must follow"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend guideline index; note most files still empty but is the package index"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Single-source content and formatter reuse across canvas/DOM presentations"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Content model → formatter → canvas/DOM cross-layer flow"}

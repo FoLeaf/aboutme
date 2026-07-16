@@ -4,20 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>19y | 高级嵌入式架构与开发</title>
+    <title>19y</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <!-- 全局背景跟随效果层 -->
-    <div class="spotlight"></div>
-    
-    <!-- 主渲染容器（仅首屏视觉主件） -->
-    <canvas id="pretext-hero"></canvas>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape--yellow" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape--pink" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape--cyan" aria-hidden="true"></div>
+
+    <div class="spotlight" aria-hidden="true"></div>
+
+    <canvas id="pretext-hero" aria-hidden="true"></canvas>
 
     <div class="content-wrapper">
-      <nav class="glass-nav">
-        <span class="logo">19y.</span>
-        <div class="links">
+      <nav class="nav">
+        <a href="#" class="logo"></a>
+        <div class="nav-links">
           <a href="#about">About</a>
           <a href="#skills">Skills</a>
           <a href="#projects">Projects</a>
@@ -25,79 +34,70 @@
         </div>
       </nav>
 
-      <header class="hero-spacer"></header>
+      <header class="hero-spacer">
+        <div class="hero-stamp">
+          <span>EMBEDDED</span>
+          <span class="hero-stamp__dot" aria-hidden="true"></span>
+          <span>IOT</span>
+          <span class="hero-stamp__dot" aria-hidden="true"></span>
+          <span>ONLINE</span>
+        </div>
+      </header>
 
       <main class="resume-body">
-        
         <section id="about" class="section fade-in">
-          <h2 class="section-heading">01 — About Me</h2>
-          <div class="about-card glass-card">
-            <h3 class="name-title">19y</h3>
-            <p class="summary-text" style="margin-top:0.5rem; padding-top:0; border:none;">
-              我是一名前端与底层技术充满热忱的嵌入式软件工程师，专注于 <strong>STM32 架构开发、物联网协议以及实时操作系统构建</strong>。注重代码可维护性与系统稳定性，并致力于通过现代开发工作流构建健壮的硬件级应用程序。擅于利用底层抽象思维突破硬件边界，热爱技术，追求性能极致。
-            </p>
+          <div class="section-head">
+            <span class="section-num">01</span>
+            <h2 class="section-heading">About Me</h2>
+          </div>
+          <div class="about-card nb-card">
+            <div class="about-card__top">
+              <h3 class="name-title"></h3>
+              <div class="badge-row" id="about-focus-tags"></div>
+            </div>
+            <p class="summary-text" id="about-opening-copy"></p>
           </div>
         </section>
 
         <section id="skills" class="section fade-in">
-          <h2 class="section-heading">02 — Expertise</h2>
-          <div class="skills-grid">
-            <div class="glass-card flex-card">
-              <h3>核心语言与脚本</h3>
-              <ul>
-                <li>熟悉 <strong>C 语言</strong>，深入了解链接脚本与堆栈优化。</li>
-                <li>熟练使用 <strong>Python</strong> 进行嵌入式辅助脚本开发与上位机工具编写（如运用 PyQt 构建数据监控终端）。</li>
-              </ul>
-            </div>
-            <div class="glass-card flex-card">
-              <h3>MCU与中间件架构</h3>
-              <ul>
-                <li>熟练掌握 <strong>STM32F1/F4 系列 MCU</strong> 底层架构与外设驱动开发。</li>
-                <li>深入运用于实际项目的中间件层：<strong>FreeRTOS、LwIP、FatFS、LVGL。</strong></li>
-              </ul>
-            </div>
-            <div class="glass-card flex-card">
-              <h3>通信协议栈与物联网</h3>
-              <ul>
-                <li>具备完整的 <strong>Modbus-RTU</strong> 主站系统设计经验。</li>
-                <li>熟练各类硬件通信时序：<strong>USART、RS485、SPI、I²C、One-Wire</strong>。</li>
-                <li>熟练使用 <strong>MQTT (Paho)</strong> 协议构建物联网上云链路。</li>
-              </ul>
-            </div>
-            <div class="glass-card flex-card">
-              <h3>硬件生态与开发工具链</h3>
-              <ul>
-                <li><strong>环境配置:</strong> Keil5, IAR EWARM, STM32CubeMX/IDE, 或现代 <strong>CLion + CMake + GCC/Clang</strong> 交叉编译架构。</li>
-                <li><strong>硬件设计:</strong> 具备双层 PCB 设计经验（基于嘉立创EDA），熟悉低功耗设计与高速 ADC/DMA 采集优化。</li>
-                <li><strong>工程化:</strong> 熟练使用 Git 进行现代敏捷版本控制。</li>
-              </ul>
-            </div>
+          <div class="section-head">
+            <span class="section-num">02</span>
+            <h2 class="section-heading">Expertise</h2>
           </div>
+          <div class="skills-grid" id="skills-grid"></div>
         </section>
 
         <section id="projects" class="section fade-in">
-          <h2 class="section-heading">03 — Selected Works</h2>
-          <!-- 这里全量交由 pretext 处理极高自由度的文字排版与异构高亮包裹 -->
-          <div class="projects-container">
+          <div class="section-head">
+            <span class="section-num">03</span>
+            <h2 class="section-heading">Selected Works</h2>
+          </div>
+          <div class="projects-container nb-canvas-shell">
             <canvas id="pretext-projects"></canvas>
           </div>
         </section>
 
         <section id="awards" class="section fade-in">
-          <h2 class="section-heading">04 — Honors & Certs</h2>
-          <div class="awards-container">
+          <div class="section-head">
+            <span class="section-num">04</span>
+            <h2 class="section-heading">Honors & Certs</h2>
+          </div>
+          <div class="awards-container nb-canvas-shell nb-canvas-shell--cyan">
             <canvas id="pretext-awards"></canvas>
           </div>
         </section>
-
       </main>
 
       <footer class="footer">
-        <p>19y · Embedded Engineer & IoT Developer</p>
-        <p style="margin-top: 10px; opacity: 0.5;">Powered by Vite & @chenglou/pretext typography engine</p>
+        <div class="footer-bar">
+          <span class="footer-mark"></span>
+          <span class="footer-sep" aria-hidden="true">/</span>
+          <span class="footer-role"></span>
+        </div>
+        <p class="footer-note">Vite · @chenglou/pretext · Neo Brutalism</p>
       </footer>
     </div>
-    
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
